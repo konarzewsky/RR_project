@@ -28,7 +28,10 @@ library(COVID19)
 library(dplyr)
 library(ggplot2)
 library(sqldf)
-library(scales)
+library(tidyverse)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
 ```
 
 ### Loading data for countries within the European Union
@@ -36,7 +39,7 @@ library(scales)
 if (params$country == 'Entire EU') {
   country = c('Austria', 'Belgium', 'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic', 'Denmark', 'Estonia', 'Finland', 'France', 'Germany', 'Greece', 'Hungary', 'Ireland', 'Italy', 'Latvia', 'Lithuania', 'Luxembourg', 'Malta', 'Netherlands', 'Poland', 'Portugal', 'Romania', 'Slovakia', 'Slovenia', 'Spain', 'Sweden')
 } else {
-  country = params$country
+  country = c(params$country)
 }
 
 data <- covid19(
@@ -84,15 +87,142 @@ ggplot(data = data_time_tests, aes(x = date, y = tests)) +
   labs(
     x = "",
     y = "",
-    title = "Daily number of tests (thousands)",
+    title = "Cumulative daily number of tests (thousands)",
     subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
-  ) + scale_y_continuous(labels = comma) +
+  ) + scale_y_continuous(labels = scales::comma) +
   scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
   theme_classic()
 ```
 
-```{r }
 
+```{r }
+world_map <- ne_countries(scale = 50, returnclass = 'sf')
+european_union <- c('Austria', 'Belgium', 'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic', 'Denmark', 'Estonia', 'Finland', 'France', 'Germany', 'Greece', 'Hungary', 'Ireland', 'Italy', 'Latvia', 'Lithuania', 'Luxembourg', 'Malta', 'Netherlands', 'Poland', 'Portugal', 'Romania', 'Slovakia', 'Slovenia', 'Spain', 'Sweden')
+data_countries <- data.frame(european_union)
+data_countries$country_from_params <- ifelse(data_countries$european_union %in% country, 1, 0)
+european_union_map <- 
+  world_map %>% 
+  filter(name_long %in% european_union)
+bbox_europe <- st_bbox(c(xmin = -10, ymin = 20, xmax = 50, ymax = 80), crs = st_crs(european_union_map))
+european_union_map_cropped <- st_crop(european_union_map, bbox_europe)
+map <- 
+  european_union_map_cropped %>% 
+  left_join(data_countries, by = c("name_long" = "european_union"))
+
+ggplot(data = map) +
+  geom_sf(mapping = aes(fill = country_from_params)) +
+  scale_fill_gradient(name = "", low = "blue", high = "red", na.value = "grey50", labels = scales::comma) +
+  labs(title = params$country) +
+  theme(plot.title.position = "plot", legend.position="none")
+```
+```{r }
+data_countries_vaccines <- sqldf(
+  "select
+    administrative_area_level_1 as country,
+    max(people_vaccinated)/1000000 as people_vaccinated
+  from data
+  group by 1
+  order by 1 ASC",
+  method = "raw"
+)
+world_map <- ne_countries(scale = 50, returnclass = 'sf')
+european_union <- c('Austria', 'Belgium', 'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic', 'Denmark', 'Estonia', 'Finland', 'France', 'Germany', 'Greece', 'Hungary', 'Ireland', 'Italy', 'Latvia', 'Lithuania', 'Luxembourg', 'Malta', 'Netherlands', 'Poland', 'Portugal', 'Romania', 'Slovakia', 'Slovenia', 'Spain', 'Sweden')
+european_union_map <- 
+  world_map %>% 
+  filter(name_long %in% european_union)
+bbox_europe <- st_bbox(c(xmin = -10, ymin = 20, xmax = 50, ymax = 80), crs = st_crs(european_union_map))
+european_union_map_cropped <- st_crop(european_union_map, bbox_europe)
+map <- 
+  european_union_map_cropped %>% 
+  left_join(data_countries_vaccines, by = c("name_long" = "country"))
+
+ggplot(data = map) +
+  geom_sf(mapping = aes(fill = people_vaccinated)) +
+  scale_fill_gradient(name = "", low = "blue", high = "red", na.value = "grey50", labels = scales::comma) +
+  labs(title = "Number of vaccinated people (milions)") +
+  theme(plot.title.position = "plot")
+```
+
+```{r }
+data_countries_vaccines_full <- sqldf(
+  "select
+    administrative_area_level_1 as country,
+    max(people_fully_vaccinated)/1000000 as people_fully_vaccinated
+  from data
+  group by 1
+  order by 1 ASC",
+  method = "raw"
+)
+world_map <- ne_countries(scale = 50, returnclass = 'sf')
+european_union <- c('Austria', 'Belgium', 'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic', 'Denmark', 'Estonia', 'Finland', 'France', 'Germany', 'Greece', 'Hungary', 'Ireland', 'Italy', 'Latvia', 'Lithuania', 'Luxembourg', 'Malta', 'Netherlands', 'Poland', 'Portugal', 'Romania', 'Slovakia', 'Slovenia', 'Spain', 'Sweden')
+european_union_map <- 
+  world_map %>% 
+  filter(name_long %in% european_union)
+bbox_europe <- st_bbox(c(xmin = -10, ymin = 20, xmax = 50, ymax = 80), crs = st_crs(european_union_map))
+european_union_map_cropped <- st_crop(european_union_map, bbox_europe)
+map <- 
+  european_union_map_cropped %>% 
+  left_join(data_countries_vaccines_full, by = c("name_long" = "country"))
+
+ggplot(data = map) +
+  geom_sf(mapping = aes(fill = people_fully_vaccinated)) +
+  scale_fill_gradient(name = "", low = "blue", high = "red", na.value = "grey50", labels = scales::comma) +
+  labs(title = "Number of fully vaccinated people (milions)") +
+  theme(plot.title.position = "plot")
+```
+```{r }
+data_countries_vaccines_coeff <- sqldf(
+  "select
+    administrative_area_level_1 as country,
+    1000000*max(people_vaccinated)/population as people_vaccinated
+  from data
+  group by 1
+  order by 1 ASC",
+  method = "raw"
+)
+world_map <- ne_countries(scale = 50, returnclass = 'sf')
+european_union <- c('Austria', 'Belgium', 'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic', 'Denmark', 'Estonia', 'Finland', 'France', 'Germany', 'Greece', 'Hungary', 'Ireland', 'Italy', 'Latvia', 'Lithuania', 'Luxembourg', 'Malta', 'Netherlands', 'Poland', 'Portugal', 'Romania', 'Slovakia', 'Slovenia', 'Spain', 'Sweden')
+european_union_map <- 
+  world_map %>% 
+  filter(name_long %in% european_union)
+bbox_europe <- st_bbox(c(xmin = -10, ymin = 20, xmax = 50, ymax = 80), crs = st_crs(european_union_map))
+european_union_map_cropped <- st_crop(european_union_map, bbox_europe)
+map <- 
+  european_union_map_cropped %>% 
+  left_join(data_countries_vaccines_coeff, by = c("name_long" = "country"))
+
+ggplot(data = map) +
+  geom_sf(mapping = aes(fill = people_vaccinated)) +
+  scale_fill_gradient(name = "", low = "blue", high = "red", na.value = "grey50", labels = scales::comma) +
+  labs(title = "Number of vaccinated people (per million inhabitants)") +
+  theme(plot.title.position = "plot")
+```
+```{r }
+data_countries_vaccines_full_coeff <- sqldf(
+  "select
+    administrative_area_level_1 as country,
+    1000000*max(people_fully_vaccinated)/population as people_fully_vaccinated
+  from data
+  group by 1
+  order by 1 ASC",
+  method = "raw"
+)
+world_map <- ne_countries(scale = 50, returnclass = 'sf')
+european_union <- c('Austria', 'Belgium', 'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic', 'Denmark', 'Estonia', 'Finland', 'France', 'Germany', 'Greece', 'Hungary', 'Ireland', 'Italy', 'Latvia', 'Lithuania', 'Luxembourg', 'Malta', 'Netherlands', 'Poland', 'Portugal', 'Romania', 'Slovakia', 'Slovenia', 'Spain', 'Sweden')
+european_union_map <- 
+  world_map %>% 
+  filter(name_long %in% european_union)
+bbox_europe <- st_bbox(c(xmin = -10, ymin = 20, xmax = 50, ymax = 80), crs = st_crs(european_union_map))
+european_union_map_cropped <- st_crop(european_union_map, bbox_europe)
+map <- 
+  european_union_map_cropped %>% 
+  left_join(data_countries_vaccines_full_coeff, by = c("name_long" = "country"))
+
+ggplot(data = map) +
+  geom_sf(mapping = aes(fill = people_fully_vaccinated)) +
+  scale_fill_gradient(name = "", low = "blue", high = "red", na.value = "grey50", labels = scales::comma) +
+  labs(title = "Number of fully vaccinated people (per million inhabitants)") +
+  theme(plot.title.position = "plot")
 ```
 
 ```{r }
