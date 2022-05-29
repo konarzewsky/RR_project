@@ -1,0 +1,57 @@
+---
+title: "Covid in the EU"
+author: "Arkadiusz Koszyk, Wojciech Konarzewski"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+output: html_document
+params:
+  country:
+    label: "Country"
+    value: Entire EU
+    input: select
+    choices: [Entire EU, Austria, Belgium, Bulgaria, Croatia, Cyprus, Czech Republic, Denmark, Estonia, Finland, France, Germany, Greece, Hungary, Ireland, Italy, Latvia, Lithuania, Luxembourg, Malta, Netherlands, Poland, Portugal, Romania, Slovakia, Slovenia, Spain, Sweden]
+  date_from:
+    label: "Date from"
+    value: "2020-01-22"
+    input: date
+    min: "2020-01-22"
+    max: !r format(Sys.time(), '%Y-%m-%d')
+  date_to:
+    label: "Date to"
+    value: !r format(Sys.time(), '%Y-%m-%d')
+    input: date
+    min: "2020-01-22"
+    max: !r format(Sys.time(), '%Y-%m-%d')
+---
+
+```{r }
+library(COVID19)
+library(dplyr)
+```
+
+```{r }
+if (params$country == 'Entire EU') {
+  country = c('Austria', 'Belgium', 'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic', 'Denmark', 'Estonia', 'Finland', 'France', 'Germany', 'Greece', 'Hungary', 'Ireland', 'Italy', 'Latvia', 'Lithuania', 'Luxembourg', 'Malta', 'Netherlands', 'Poland', 'Portugal', 'Romania', 'Slovakia', 'Slovenia', 'Spain', 'Sweden')
+} else {
+  country = params$country
+}
+
+data <- covid19(
+  country = country,
+  level = 1,
+  start = params$date_from,
+  end = params$date_to,
+)
+```
+
+
+```{r }
+
+```
+
+```{r }
+
+```
+
+```{r }
+
+```
