@@ -22,12 +22,13 @@ params:
     min: "2020-01-22"
     max: !r format(Sys.time(), '%Y-%m-%d')
 ---
-
-```{r }
+### Libraries used
+```{r message=FALSE, warning=FALSE}
 library(COVID19)
 library(dplyr)
 ```
 
+### Loading data for countries within the European Union
 ```{r }
 if (params$country == 'Entire EU') {
   country = c('Austria', 'Belgium', 'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic', 'Denmark', 'Estonia', 'Finland', 'France', 'Germany', 'Greece', 'Hungary', 'Ireland', 'Italy', 'Latvia', 'Lithuania', 'Luxembourg', 'Malta', 'Netherlands', 'Poland', 'Portugal', 'Romania', 'Slovakia', 'Slovenia', 'Spain', 'Sweden')
@@ -40,9 +41,28 @@ data <- covid19(
   level = 1,
   start = params$date_from,
   end = params$date_to,
+  verbose = FALSE
 )
 ```
 
+### Epidemiological variables
+Definitions of variables are taken from the documentation of the [COVID-19 Data Hub](https://covid19datahub.io/index.html#covid-19-data-hub-)
+
+| Variable    | Description |
+| :---------- | :---------------- |
+| `confirmed` | Cumulative number of confirmed cases. |
+| `deaths`    | Cumulative number of deaths.        |
+| `recovered` | Cumulative number of patients released from hospitals or reported recovered.        |
+| `tests`    | Cumulative number of tests.       |
+| `vaccines`    | Cumulative number of total doses administered.        |
+| `people_vaccinated`    | Cumulative number of people who received at least one vaccine dose.        |
+| `people_fully_vaccinated`    | Cumulative number of people who received all doses prescribed by the vaccination protocol.        |
+| `hosp`    | Number of hospitalized patients on date.        |
+| `icu`    | Number of hospitalized patients in intensive therapy on date.         |
+| `vent`    | Number of patients requiring invasive ventilation on date.        |
+| `population`    | Total population.        |
+	
+	
 
 ```{r }
 
