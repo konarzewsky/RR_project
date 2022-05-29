@@ -3,3 +3,5 @@
 install.packages('COVID19')
 install.packages('dplyr')
 install.packages('ggplot2')
+install.packages('sqldf')
+install.packages('scales')

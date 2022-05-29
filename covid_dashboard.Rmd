@@ -26,6 +26,9 @@ params:
 ```{r message=FALSE, warning=FALSE}
 library(COVID19)
 library(dplyr)
+library(ggplot2)
+library(sqldf)
+library(scales)
 ```
 
 ### Loading data for countries within the European Union
@@ -65,7 +68,27 @@ Definitions of variables are taken from the documentation of the [COVID-19 Data 
 	
 
 ```{r }
+data$date_char = as.character(data$date)
+data_time_tests <- sqldf(
+  "select
+    date_char as date,
+    sum(tests)/1000 as tests
+  from data
+  group by 1
+  order by 1 ASC",
+  method = "raw"
+)
 
+ggplot(data = data_time_tests, aes(x = date, y = tests)) + 
+  geom_bar(position="stack", stat="identity") +
+  labs(
+    x = "",
+    y = "",
+    title = "Daily number of tests (thousands)",
+    subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
+  ) + scale_y_continuous(labels = comma) +
+  scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
+  theme_classic()
 ```
 
 ```{r }
