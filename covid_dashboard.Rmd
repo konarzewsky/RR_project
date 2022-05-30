@@ -85,9 +85,11 @@ Definitions of variables are taken from the documentation of the [COVID-19 Data 
 ```{r, plot_tests}
 data$date_char = as.character(data$date)
 data1 <- data[data$administrative_area_level_1 %in% country,]
+data1$date_week <- cut(as.Date(data1$date_char), "week")
+data1$date_week_char = as.character(data1$date_week)
 data_time_tests <- sqldf(
   "select
-    date_char as date,
+    date_week_char as date,
     sum(tests)/1000 as tests
   from data1
   group by 1
