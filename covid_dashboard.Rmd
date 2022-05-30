@@ -2,7 +2,9 @@
 title: "Covid in the EU"
 author: "Arkadiusz Koszyk, Wojciech Konarzewski"
 date: "`r format(Sys.time(), '%Y-%m-%d')`"
-output: html_document
+output: 
+  html_document:
+    code_folding: hide
 params:
   country:
     label: "Country"
@@ -22,8 +24,14 @@ params:
     min: "2020-01-22"
     max: !r format(Sys.time(), '%Y-%m-%d')
 ---
-### Libraries used
-```{r, libraries, message=FALSE, warning=FALSE}
+
+```{r, global_options, include=FALSE}
+knitr::opts_chunk$set(
+  results='hide', fig.keep='all', message=FALSE, warning=FALSE
+)
+```
+
+```{r, libraries}
 library(COVID19)
 library(dplyr)
 library(ggplot2)
@@ -33,6 +41,7 @@ library(sf)
 library(rnaturalearth)
 library(rnaturalearthdata)
 ```
+
 ```{r, eu_countries}
 eu_countries <- c('Austria', 'Belgium', 'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic', 'Denmark', 'Estonia', 'Finland', 'France', 'Germany', 'Greece', 'Hungary', 'Ireland', 'Italy', 'Latvia', 'Lithuania', 'Luxembourg', 'Malta', 'Netherlands', 'Poland', 'Portugal', 'Romania', 'Slovakia', 'Slovenia', 'Spain', 'Sweden')
 ```
@@ -98,7 +107,7 @@ ggplot(data = data_time_tests, aes(x = date, y = tests)) +
   theme_classic()
 ```
 
-```{r }
+```{r, map_function}
 plot_map <- function(data, fill, title, legend_position, high_color, limits, breaks, labels) {
   ggplot(data = data) +
   geom_sf(mapping = aes(fill = fill)) +
