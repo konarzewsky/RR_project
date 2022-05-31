@@ -87,23 +87,27 @@ data$date_char = as.character(data$date)
 data1 <- data[data$administrative_area_level_1 %in% country,]
 data1$date_week <- cut(as.Date(data1$date_char), "week")
 data1$date_week_char = as.character(data1$date_week)
+data1 <- data1[order(data1$date),]
 
 data_time_tests <- sqldf(
   "select
     date_week_char as date,
-    (sum(tests) over(order by date))/1000 as tests
+    sum(tests)/1000 as tests
   from data1
   group by 1
   order by 1 ASC",
   method = "raw"
 )
 
+data_time_tests <- data_time_tests %>%
+  mutate_at(vars(tests), list(~ .x - lag(.x)))
+
 ggplot(data = data_time_tests, aes(x = date, y = tests)) + 
   geom_bar(position="stack", stat="identity") +
   labs(
     x = "",
     y = "",
-    title = "Cumulative weekly number of tests (thousands)",
+    title = "Weekly number of tests (thousands)",
     subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
   ) + scale_y_continuous(labels = scales::comma) +
   scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
@@ -114,19 +118,22 @@ ggplot(data = data_time_tests, aes(x = date, y = tests)) +
 data_time_vaccines <- sqldf(
   "select
     date_week_char as date,
-    (sum(vaccines) over(order by date))/1000 as vaccines
+    sum(vaccines)/1000 as vaccines
   from data1
   group by 1
   order by 1 ASC",
   method = "raw"
 )
 
+data_time_vaccines <- data_time_vaccines %>%
+  mutate_at(vars(vaccines), list(~ .x - lag(.x)))
+
 ggplot(data = data_time_vaccines, aes(x = date, y = vaccines)) + 
   geom_bar(position="stack", stat="identity") +
   labs(
     x = "",
     y = "",
-    title = "Vaccines - cumulative weekly number of total doses administered (thousands)",
+    title = "Vaccines - weekly number of total doses administered (thousands)",
     subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
   ) + scale_y_continuous(labels = scales::comma) +
   scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
