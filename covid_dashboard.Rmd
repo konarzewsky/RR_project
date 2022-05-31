@@ -61,7 +61,7 @@ data <- covid19(
   end = params$date_to,
   verbose = FALSE
 )
-data_ak <- data
+df <- data
 ```
 
 ### Epidemiological variables
@@ -72,7 +72,7 @@ Definitions of variables are taken from the documentation of the [COVID-19 Data 
 | `confirmed` | Cumulative number of confirmed cases. |
 | `deaths`    | Cumulative number of deaths.        |
 | `recovered` | Cumulative number of patients released from hospitals or reported recovered.        |
-| `tests`    | Cumulative number of tests.       |
+| `deaths`    | Cumulative number of deaths.       |
 | `vaccines`    | Cumulative number of total doses administered.        |
 | `people_vaccinated`    | Cumulative number of people who received at least one vaccine dose.        |
 | `people_fully_vaccinated`    | Cumulative number of people who received all doses prescribed by the vaccination protocol.        |
@@ -83,9 +83,9 @@ Definitions of variables are taken from the documentation of the [COVID-19 Data 
 	
 	
 
-```{r, plots_tests_vaccines, fig.show="hold", out.width="50%", fig.align = 'center'}
+```{r, plots_deaths_vaccines, fig.show="hold", out.width="50%", fig.align = 'center'}
 data <- data %>%
-  mutate_at(vars(tests), list(~ .x - lag(.x)))
+  mutate_at(vars(deaths), list(~ .x - lag(.x)))
 
 data <- data %>%
   mutate_at(vars(vaccines), list(~ .x - lag(.x)))
@@ -96,23 +96,23 @@ data1$date_month <- cut(as.Date(data1$date_char), "month")
 data1$date_month_char = as.character(data1$date_month)
 data1 <- data1[order(data1$date),]
 
-data_time_tests <- sqldf(
+data_time_deaths <- sqldf(
   "select
     date_month_char as date,
-    sum(tests)/1000 as tests
+    sum(deaths)/1000 as deaths
   from data1
-  where tests >= 0
+  where deaths >= 0
   group by 1
   order by 1 ASC",
   method = "raw"
 )
-if (dim(data_time_tests)[1] != 0) {
-  ggplot(data = head(data_time_tests,-1), aes(x = date, y = tests)) + 
+if (dim(data_time_deaths)[1] != 0) {
+  ggplot(data = head(data_time_deaths,-1), aes(x = date, y = deaths)) + 
     geom_bar(position="stack", stat="identity") +
     labs(
       x = "",
       y = "",
-      title = "monthly number of tests (thousands)",
+      title = "monthly number of deaths (thousands)",
       subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
     ) + scale_y_continuous(labels = scales::comma) +
     scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
@@ -310,38 +310,40 @@ plot_map(
 )
 ```
 
-```{r plot_tests2}
-data_ak$date_char = as.character(data_ak$date)
-data1 <- data_ak[data_ak$administrative_area_level_1 %in% country,]
-data1[is.na(data1$tests), ]$tests <- 0
-data1 <- data1[,c("date", "date_char", "tests", "administrative_area_level_1")]
-#sum(is.na(data1$tests)) #No missings
-#sum(is.na(data1$administrative_area_level_1))
+```{r, plot_tests2, fig.align = 'center'}
+df$date_char = as.character(df$date)
+df1 <- df[df$administrative_area_level_1 %in% country,]
+df1[is.na(df1$tests), ]$tests <- 0
+df1 <- df1[,c("date", "date_char", 
+                  "tests",
+                  "administrative_area_level_1")]
+#sum(is.na(df1$tests)) #No missings
+#sum(is.na(df1$administrative_area_level_1))
 
-data1_wide <- data1 %>%
+df1_wide <- df1 %>%
   pivot_wider(names_from = administrative_area_level_1, 
               values_from = tests,
               values_fill = 0)
-glimpse(data1_wide)
-colnames(data1_wide)
-data1_wide[, c(3:29)] <- 
-  lapply(data1_wide[, c(3:29)], as.numeric)
+glimpse(df1_wide)
+colnames(df1_wide)
+df1_wide[, c(3:29)] <- 
+  lapply(df1_wide[, c(3:29)], as.numeric)
 
-data1_wide$tests_all <- data1_wide[, c(3:29)] %>% rowSums()
-data1_wide$date_month <- cut(as.Date(data1_wide$date_char), "month")
-data1_wide$date_month_char = as.character(data1_wide$date_month)
+df1_wide$tests_all <- df1_wide[, c(3:29)] %>% rowSums()
+df1_wide$date_month <- cut(as.Date(df1_wide$date_char), "month")
+df1_wide$date_month_char = as.character(df1_wide$date_month)
 
-data_time_tests2 <- sqldf(
+df_time_tests2 <- sqldf(
   "select
     date_month_char as date,
     tests_all/1000000 as tests
-  from data1_wide
+  from df1_wide
   group by 1
   order by 1 ASC",
   method = "raw"
 )
 
-ggplot(data = data_time_tests2, aes(x = date, y = tests)) + 
+ggplot(data = df_time_tests2, aes(x = date, y = tests)) + 
   geom_bar(position="stack", stat="identity") +
   labs(
     x = "",
@@ -351,5 +353,50 @@ ggplot(data = data_time_tests2, aes(x = date, y = tests)) +
   ) + scale_y_continuous(labels = scales::comma) +
   scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
   theme_classic()
+```
+
+```{r, plot_deaths, fig.align = 'center'}
+df1 <- df[df$administrative_area_level_1 %in% country,]
+df1[is.na(df1$deaths), ]$deaths <- 0
+df1 <- df1[,c("date", "date_char", 
+                  "deaths",
+                  "administrative_area_level_1")]
+#sum(is.na(df1$deaths)) #No missings
+#sum(is.na(df1$administrative_area_level_1))
+
+df1_wide <- df1 %>%
+  pivot_wider(names_from = administrative_area_level_1, 
+              values_from = deaths,
+              values_fill = 0)
+glimpse(df1_wide)
+colnames(df1_wide)
+df1_wide[, c(3:29)] <- 
+  lapply(df1_wide[, c(3:29)], as.numeric)
+
+df1_wide$deaths_all <- df1_wide[, c(3:29)] %>% rowSums()
+df1_wide$date_month <- cut(as.Date(df1_wide$date_char), "month")
+df1_wide$date_month_char = as.character(df1_wide$date_month)
+
+df_time_deaths2 <- sqldf(
+  "select
+    date_month_char as date,
+    deaths_all/1000 as deaths
+  from df1_wide
+  group by 1
+  order by 1 ASC",
+  method = "raw"
+)
+
+ggplot(data = df_time_deaths2, aes(x = date, y = deaths)) + 
+  geom_bar(position="stack", stat="identity") +
+  labs(
+    x = "",
+    y = "",
+    title = "Cumulative monthly number of deaths (thousands)",
+    subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
+  ) + scale_y_continuous(labels = scales::comma) +
+  scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
+  theme_classic()
+
 ```
 
