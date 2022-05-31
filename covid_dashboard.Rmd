@@ -61,6 +61,7 @@ data <- covid19(
   end = params$date_to,
   verbose = FALSE
 )
+data_ak <- data
 ```
 
 ### Epidemiological variables
@@ -309,7 +310,46 @@ plot_map(
 )
 ```
 
-```{r}
+```{r plot_tests2}
+data_ak$date_char = as.character(data_ak$date)
+data1 <- data_ak[data_ak$administrative_area_level_1 %in% country,]
+data1[is.na(data1$tests), ]$tests <- 0
+data1 <- data1[,c("date", "date_char", "tests", "administrative_area_level_1")]
+#sum(is.na(data1$tests)) #No missings
+#sum(is.na(data1$administrative_area_level_1))
 
+data1_wide <- data1 %>%
+  pivot_wider(names_from = administrative_area_level_1, 
+              values_from = tests,
+              values_fill = 0)
+glimpse(data1_wide)
+colnames(data1_wide)
+data1_wide[, c(3:29)] <- 
+  lapply(data1_wide[, c(3:29)], as.numeric)
+
+data1_wide$tests_all <- data1_wide[, c(3:29)] %>% rowSums()
+data1_wide$date_month <- cut(as.Date(data1_wide$date_char), "month")
+data1_wide$date_month_char = as.character(data1_wide$date_month)
+
+data_time_tests2 <- sqldf(
+  "select
+    date_month_char as date,
+    tests_all/1000000 as tests
+  from data1_wide
+  group by 1
+  order by 1 ASC",
+  method = "raw"
+)
+
+ggplot(data = data_time_tests2, aes(x = date, y = tests)) + 
+  geom_bar(position="stack", stat="identity") +
+  labs(
+    x = "",
+    y = "",
+    title = "Cumulative monthly number of tests (millions)",
+    subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
+  ) + scale_y_continuous(labels = scales::comma) +
+  scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
+  theme_classic()
 ```
 
