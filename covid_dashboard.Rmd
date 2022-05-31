@@ -90,7 +90,7 @@ data1$date_week_char = as.character(data1$date_week)
 data_time_tests <- sqldf(
   "select
     date_week_char as date,
-    sum(tests)/1000 as tests
+    (sum(tests) over(order by date))/1000 as tests
   from data1
   group by 1
   order by 1 ASC",
@@ -274,4 +274,7 @@ plot_map(
 )
 ```
 
+```{r}
+
+```
 
