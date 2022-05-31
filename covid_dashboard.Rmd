@@ -82,11 +82,12 @@ Definitions of variables are taken from the documentation of the [COVID-19 Data 
 	
 	
 
-```{r, plot_tests}
+```{r, plots_tests_vaccines, fig.show="hold", out.width="50%"}
 data$date_char = as.character(data$date)
 data1 <- data[data$administrative_area_level_1 %in% country,]
 data1$date_week <- cut(as.Date(data1$date_char), "week")
 data1$date_week_char = as.character(data1$date_week)
+
 data_time_tests <- sqldf(
   "select
     date_week_char as date,
@@ -97,16 +98,39 @@ data_time_tests <- sqldf(
   method = "raw"
 )
 
-ggplot(data = data_time_tests, aes(x = date, y = tests)) + 
+ggplot(data = data_time_tests, aes(x = date, y = tests, fill = "blue")) + 
   geom_bar(position="stack", stat="identity") +
   labs(
     x = "",
     y = "",
-    title = "Cumulative daily number of tests (thousands)",
+    title = "Cumulative weekly number of tests (thousands)",
     subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
   ) + scale_y_continuous(labels = scales::comma) +
   scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
-  theme_classic()
+  theme(legend.position = "none")
+
+#############################################################
+
+data_time_vaccines <- sqldf(
+  "select
+    date_week_char as date,
+    (sum(vaccines) over(order by date))/1000 as vaccines
+  from data1
+  group by 1
+  order by 1 ASC",
+  method = "raw"
+)
+
+ggplot(data = data_time_vaccines, aes(x = date, y = vaccines, fill = "red")) + 
+  geom_bar(position="stack", stat="identity") +
+  labs(
+    x = "",
+    y = "",
+    title = "Vaccines - cumulative weekly number of total doses administered (thousands)",
+    subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
+  ) + scale_y_continuous(labels = scales::comma) +
+  scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
+  theme(legend.position = "none")
 ```
 
 ```{r, map_function}
@@ -117,11 +141,11 @@ plot_map <- function(data, fill, title, legend_position, high_color, limits, bre
                         breaks = breaks,
                         labels = labels) +
   labs(title = title) +
-  theme(plot.title.position = "plot", legend.position = "bottom", legend.key.width = unit(2.5, "cm"))
+  theme(plot.title.position = "plot", legend.position = legend_position, legend.key.width = unit(2.5, "cm"))
 }
 ```
 
-```{r, map_country}
+```{r, map_country, fig.align = 'center'}
 world_map <- ne_countries(scale = 50, returnclass = 'sf')
 data_countries <- data.frame(eu_countries)
 data_countries$country_from_params <- ifelse(data_countries$eu_countries %in% country, 1, 0)
