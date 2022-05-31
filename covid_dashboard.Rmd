@@ -91,13 +91,13 @@ data <- data %>%
 
 data$date_char = as.character(data$date)
 data1 <- data[data$administrative_area_level_1 %in% country,]
-data1$date_week <- cut(as.Date(data1$date_char), "week")
-data1$date_week_char = as.character(data1$date_week)
+data1$date_month <- cut(as.Date(data1$date_char), "month")
+data1$date_month_char = as.character(data1$date_month)
 data1 <- data1[order(data1$date),]
 
 data_time_tests <- sqldf(
   "select
-    date_week_char as date,
+    date_month_char as date,
     sum(tests)/1000 as tests
   from data1
   where tests >= 0
@@ -111,7 +111,7 @@ if (dim(data_time_tests)[1] != 0) {
     labs(
       x = "",
       y = "",
-      title = "Weekly number of tests (thousands)",
+      title = "monthly number of tests (thousands)",
       subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
     ) + scale_y_continuous(labels = scales::comma) +
     scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
@@ -121,7 +121,7 @@ if (dim(data_time_tests)[1] != 0) {
 
 data_time_vaccines <- sqldf(
   "select
-    date_week_char as date,
+    date_month_char as date,
     sum(vaccines)/1000 as vaccines
   from data1
   where vaccines >= 0
@@ -136,7 +136,7 @@ if (dim(data_time_vaccines)[1] != 0) {
     labs(
       x = "",
       y = "",
-      title = "Vaccines - weekly number of total doses administered (thousands)",
+      title = "Vaccines - monthly number of total doses administered (thousands)",
       subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
     ) + scale_y_continuous(labels = scales::comma) +
     scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
