@@ -82,7 +82,13 @@ Definitions of variables are taken from the documentation of the [COVID-19 Data 
 	
 	
 
-```{r, plots_tests_vaccines, fig.show="hold", out.width="50%"}
+```{r, plots_tests_vaccines, fig.show="hold", out.width="50%", fig.align = 'center'}
+data <- data %>%
+  mutate_at(vars(tests), list(~ .x - lag(.x)))
+
+data <- data %>%
+  mutate_at(vars(vaccines), list(~ .x - lag(.x)))
+
 data$date_char = as.character(data$date)
 data1 <- data[data$administrative_area_level_1 %in% country,]
 data1$date_week <- cut(as.Date(data1$date_char), "week")
@@ -94,25 +100,23 @@ data_time_tests <- sqldf(
     date_week_char as date,
     sum(tests)/1000 as tests
   from data1
+  where tests >= 0
   group by 1
   order by 1 ASC",
   method = "raw"
 )
-
-data_time_tests <- data_time_tests %>%
-  mutate_at(vars(tests), list(~ .x - lag(.x)))
-
-ggplot(data = data_time_tests, aes(x = date, y = tests)) + 
-  geom_bar(position="stack", stat="identity") +
-  labs(
-    x = "",
-    y = "",
-    title = "Weekly number of tests (thousands)",
-    subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
-  ) + scale_y_continuous(labels = scales::comma) +
-  scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
-  theme(legend.position = "none")
-
+if (dim(data_time_tests)[1] != 0) {
+  ggplot(data = head(data_time_tests,-1), aes(x = date, y = tests)) + 
+    geom_bar(position="stack", stat="identity") +
+    labs(
+      x = "",
+      y = "",
+      title = "Weekly number of tests (thousands)",
+      subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
+    ) + scale_y_continuous(labels = scales::comma) +
+    scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
+    theme(legend.position = "none")
+}
 #############################################################
 
 data_time_vaccines <- sqldf(
@@ -120,24 +124,24 @@ data_time_vaccines <- sqldf(
     date_week_char as date,
     sum(vaccines)/1000 as vaccines
   from data1
+  where vaccines >= 0
   group by 1
   order by 1 ASC",
   method = "raw"
 )
 
-data_time_vaccines <- data_time_vaccines %>%
-  mutate_at(vars(vaccines), list(~ .x - lag(.x)))
-
-ggplot(data = data_time_vaccines, aes(x = date, y = vaccines)) + 
-  geom_bar(position="stack", stat="identity") +
-  labs(
-    x = "",
-    y = "",
-    title = "Vaccines - weekly number of total doses administered (thousands)",
-    subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
-  ) + scale_y_continuous(labels = scales::comma) +
-  scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
-  theme(legend.position = "none")
+if (dim(data_time_vaccines)[1] != 0) {
+  ggplot(data = head(data_time_vaccines,-1), aes(x = date, y = vaccines)) + 
+    geom_bar(position="stack", stat="identity") +
+    labs(
+      x = "",
+      y = "",
+      title = "Vaccines - weekly number of total doses administered (thousands)",
+      subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
+    ) + scale_y_continuous(labels = scales::comma) +
+    scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
+    theme(legend.position = "none")
+}
 ```
 
 ```{r, map_function}
@@ -152,7 +156,7 @@ plot_map <- function(data, fill, title, legend_position, high_color, limits, bre
 }
 ```
 
-```{r, map_country, fig.align = 'center'}
+```{r, map_country}
 world_map <- ne_countries(scale = 50, returnclass = 'sf')
 data_countries <- data.frame(eu_countries)
 data_countries$country_from_params <- ifelse(data_countries$eu_countries %in% country, 1, 0)
