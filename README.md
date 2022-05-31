@@ -4,6 +4,10 @@ Authors: Arkadiusz Koszyk, Wojciech Konarzewski
 
 ## Project description
 
+Our project allows to generate a report containing basic information about **Covid-19** pandemic in the European Union. A report can be generated for one selected country or for the entire EU. 
+
+Project is based mostly on [COVID19](https://cran.r-project.org/web/packages/COVID19/COVID19.pdf) R package which provides very basic data regarding Covid-19 pandemic, such as inter alia number of tests, number of vaccines and number of deaths.
+
 ## How to generate a report?
 
 1. Install required packages
