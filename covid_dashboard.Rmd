@@ -98,7 +98,7 @@ data_time_tests <- sqldf(
   method = "raw"
 )
 
-ggplot(data = data_time_tests, aes(x = date, y = tests, fill = "blue")) + 
+ggplot(data = data_time_tests, aes(x = date, y = tests)) + 
   geom_bar(position="stack", stat="identity") +
   labs(
     x = "",
@@ -121,7 +121,7 @@ data_time_vaccines <- sqldf(
   method = "raw"
 )
 
-ggplot(data = data_time_vaccines, aes(x = date, y = vaccines, fill = "red")) + 
+ggplot(data = data_time_vaccines, aes(x = date, y = vaccines)) + 
   geom_bar(position="stack", stat="identity") +
   labs(
     x = "",
