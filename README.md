@@ -23,7 +23,28 @@ Open ```covid_dashboard.Rmd``` file and use **Knit with parameters** option.
 Select the desired parameters or leave the default ones and press **Knit**.
 Your report will be generated as an **html** file.
 
+## Software used
 
+**RStudio**
+
+- RStudio 2021.09.1+372 "Ghost Orchid" Release (99999999999999999999999999999999, 2021-11-08) for Windows
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) QtWebEngine/5.12.8 Chrome/69.0.3497.128 Safari/537.36
+
+- RStudio 2021.09.1+372 "Ghost Orchid" Release (8b9ced188245155642d024aa3630363df611088a, 2021-11-08) for macOS
+Mozilla/5.0 (Macintosh; Intel Mac OS X 12_1_0) AppleWebKit/537.36 (KHTML, like Gecko) QtWebEngine/5.12.10 Chrome/69.0.3497.128 Safari/537.36
+
+**R packages**
+
+- [COVID19](https://covid19datahub.io/) version 3.0.2
+- [dplyr](https://dplyr.tidyverse.org/) version 1.0.9
+- [ggplot2](https://ggplot2.tidyverse.org/) version 3.3.6
+- [sqldf](https://github.com/ggrothendieck/sqldf) version 0.4-11
+- [scales](https://scales.r-lib.org/) version 1.2.0
+- [tidyverse](https://tidyverse.tidyverse.org/) version 1.3.1
+- [sf](https://r-spatial.github.io/sf/) version 1.0-7
+- [rnaturalearth](https://github.com/ropensci/rnaturalearth) version 0.1.0
+- [rnaturalearthdata](https://github.com/ropensci/rnaturalearthdata) version 0.1.0
+- [rmarkdown](https://github.com/rstudio/rmarkdown) version 2.11
 
 ## References
 
