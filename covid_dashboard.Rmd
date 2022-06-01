@@ -270,6 +270,8 @@ if (params$country == "Entire EU") {
     theme(legend.position = "none")
 }
 ```
+The number of tests from `r params$date_from` to `r params$date_to` in `r params$country` is equal to `r round(max(df_time_tests2$tests),1)` millions.
+
 
 
 ```{r, plot_deaths, fig.align = 'center'}
@@ -349,6 +351,8 @@ if (params$country == "Entire EU") {
     theme(legend.position = "none")
 }
 ```
+The number of deaths from `r params$date_from` to `r params$date_to` in `r params$country` is equal to `r round(max(df_time_deaths2$deaths),1)` thousands.
+
 
 ### EU - vaccinated and fully vaccinated people
 
