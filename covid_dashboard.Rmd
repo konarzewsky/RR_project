@@ -25,6 +25,12 @@ params:
     max: !r format(Sys.time(), '%Y-%m-%d')
 ---
 
+
+Selected country: `r params$country`
+
+Date range: from `r params$date_from` to `r params$date_to`
+
+
 ```{r, global_options, include=FALSE}
 knitr::opts_chunk$set(
   results='hide', fig.keep='all', message=FALSE, warning=FALSE
@@ -46,8 +52,9 @@ library(rnaturalearthdata)
 eu_countries <- c('Austria', 'Belgium', 'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic', 'Denmark', 'Estonia', 'Finland', 'France', 'Germany', 'Greece', 'Hungary', 'Ireland', 'Italy', 'Latvia', 'Lithuania', 'Luxembourg', 'Malta', 'Netherlands', 'Poland', 'Portugal', 'Romania', 'Slovakia', 'Slovenia', 'Spain', 'Sweden')
 ```
 
-### Loading data for countries within the European Union
 ```{r, data_loading}
+# Loading data for countries within the European Union
+
 if (params$country == 'Entire EU') {
   country = eu_countries
 } else {
