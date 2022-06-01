@@ -201,29 +201,33 @@ if (dim(data_time_vaccines)[1] != 0) {
 ```
 
 ```{r, plot_tests2, fig.align = 'center'}
+# The case when we choose the entire EU
 if (params$country == "Entire EU") {
+  # Prepare data to pivoting and plotting
   df$date_char = as.character(df$date)
   df1 <- df[df$administrative_area_level_1 %in% country,]
   df1[is.na(df1$tests), ]$tests <- 0
   df1 <- df1[,c("date", "date_char", 
                 "tests",
                 "administrative_area_level_1")]
-  #sum(is.na(df1$tests)) #No missings
-  #sum(is.na(df1$administrative_area_level_1))
   
+  # Pivot data from long to wide
   df1_wide <- df1 %>%
     pivot_wider(names_from = administrative_area_level_1, 
                 values_from = tests,
                 values_fill = 0)
   glimpse(df1_wide)
   colnames(df1_wide)
+  # Make sure that the are no problems with rowSums()
   df1_wide[, c(3:29)] <- 
     lapply(df1_wide[, c(3:29)], as.numeric)
   
+  # Add up tests for all countries
   df1_wide$tests_all <- df1_wide[, c(3:29)] %>% rowSums()
   df1_wide$date_month <- cut(as.Date(df1_wide$date_char), "month")
   df1_wide$date_month_char = as.character(df1_wide$date_month)
   
+  # Group data into monthly intervals
   df_time_tests2 <- sqldf(
     "select
     date_month_char as date,
@@ -234,6 +238,7 @@ if (params$country == "Entire EU") {
     method = "raw"
   )
   
+  # An interactive bar chart 
   ggplot(data = df_time_tests2, aes(x = date, y = tests)) + 
     geom_bar(position="stack", stat="identity") +
     labs(
@@ -245,18 +250,19 @@ if (params$country == "Entire EU") {
     scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
     theme(legend.position = "none")
   
+# The case when we choose only one country
 } else if (country %in% eu_countries) {
+  # Prepare data to grouping
   df$date_char = as.character(df$date)
-  #df[is.na(df1$tests), ]$tests <- 0
   df1 <- df[df$administrative_area_level_1 %in% params$country,]
-  #df1[is.na(df1$tests), ]$tests <- 0
   df1 <- df1[,c("date", "date_char", 
                 "tests",
                 "administrative_area_level_1")]
   df1$tests <- as.numeric(df1$tests)
   df1$date_month <- cut(as.Date(df1$date_char), "month")
   df1$date_month_char = as.character(df1$date_month)
-
+  
+  # Group data into monthly intervals
   df_time_tests2 <- sqldf(
     "select
     date_month_char as date,
@@ -266,7 +272,7 @@ if (params$country == "Entire EU") {
   order by 1 ASC",
     method = "raw"
   )
-  
+  # An interactive bar chart 
   ggplot(data = df_time_tests2, aes(x = date, y = tests)) + 
     geom_bar(position="stack", stat="identity") +
     labs(
@@ -284,28 +290,32 @@ The number of tests from `r params$date_from` to `r params$date_to` in `r params
 
 
 ```{r, plot_deaths, fig.align = 'center'}
+# The case when we choose the entire EU
 if (params$country == "Entire EU") {
+  # Prepare data to pivoting and plotting
   df1 <- df[df$administrative_area_level_1 %in% country,]
   df1[is.na(df1$deaths), ]$deaths <- 0
   df1 <- df1[,c("date", "date_char", 
                     "deaths",
                     "administrative_area_level_1")]
-  #sum(is.na(df1$deaths)) #No missings
-  #sum(is.na(df1$administrative_area_level_1))
   
+  # Pivot data from long to wide
   df1_wide <- df1 %>%
     pivot_wider(names_from = administrative_area_level_1, 
                 values_from = deaths,
                 values_fill = 0)
   glimpse(df1_wide)
   colnames(df1_wide)
+  # Make sure that the are no problems with rowSums()
   df1_wide[, c(3:29)] <- 
     lapply(df1_wide[, c(3:29)], as.numeric)
   
+  # Add up deaths for all countries
   df1_wide$deaths_all <- df1_wide[, c(3:29)] %>% rowSums()
   df1_wide$date_month <- cut(as.Date(df1_wide$date_char), "month")
   df1_wide$date_month_char = as.character(df1_wide$date_month)
   
+  # Group data into monthly intervals
   df_time_deaths2 <- sqldf(
     "select
       date_month_char as date,
@@ -315,7 +325,7 @@ if (params$country == "Entire EU") {
     order by 1 ASC",
     method = "raw"
   )
-  
+  # An interactive bar chart 
   ggplot(data = df_time_deaths2, aes(x = date, y = deaths)) + 
     geom_bar(position="stack", stat="identity") +
     labs(
@@ -328,7 +338,9 @@ if (params$country == "Entire EU") {
     scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
     theme(legend.position = "none")
   
+# The case when we choose only one country  
 } else if (params$country %in% eu_countries) {
+  # Prepare data to grouping
   df$date_char = as.character(df$date)
   df1 <- df[df$administrative_area_level_1 %in% params$country,]
   df1 <- df1[,c("date", "date_char", 
@@ -338,6 +350,7 @@ if (params$country == "Entire EU") {
   df1$date_month <- cut(as.Date(df1$date_char), "month")
   df1$date_month_char = as.character(df1$date_month)
 
+  # Group data into monthly intervals
   df_time_deaths2 <- sqldf(
     "select
     date_month_char as date,
@@ -347,7 +360,7 @@ if (params$country == "Entire EU") {
   order by 1 ASC",
     method = "raw"
   )
-  
+  # An interactive bar chart 
   ggplot(data = df_time_deaths2, aes(x = date, y = deaths)) + 
     geom_bar(position="stack", stat="identity") +
     labs(
