@@ -229,12 +229,13 @@ if (params$country == "Entire EU") {
     geom_bar(position="stack", stat="identity") +
     labs(
       x = "",
-      y = "",
+      y = "millions",
       title = "Cumulative monthly number of tests (millions)",
       subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
     ) + scale_y_continuous(labels = scales::comma) +
     scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
-    theme_classic()
+    theme(legend.position = "none")
+  
 } else if (country %in% eu_countries) {
   df$date_char = as.character(df$date)
   #df[is.na(df1$tests), ]$tests <- 0
@@ -261,12 +262,12 @@ if (params$country == "Entire EU") {
     geom_bar(position="stack", stat="identity") +
     labs(
       x = "",
-      y = "",
+      y = "millions",
       title = "Cumulative monthly number of tests (millions)",
       subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
     ) + scale_y_continuous(labels = scales::comma) +
     scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
-    theme_classic()
+    theme(legend.position = "none")
 }
 ```
 
@@ -308,13 +309,13 @@ if (params$country == "Entire EU") {
     geom_bar(position="stack", stat="identity") +
     labs(
       x = "",
-      y = "",
+      y = "thousands",
       title = "Cumulative monthly number of deaths (thousands)",
       subtitle = paste(params$country,", ",
                        params$date_from," - ", params$date_to, sep=""),
     ) + scale_y_continuous(labels = scales::comma) +
     scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
-    theme_classic()
+    theme(legend.position = "none")
   
 } else if (params$country %in% eu_countries) {
   df$date_char = as.character(df$date)
@@ -340,12 +341,12 @@ if (params$country == "Entire EU") {
     geom_bar(position="stack", stat="identity") +
     labs(
       x = "",
-      y = "",
+      y = "thousands",
       title = "Cumulative monthly number of deaths (thousands)",
       subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
     ) + scale_y_continuous(labels = scales::comma) +
     scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
-    theme_classic()
+    theme(legend.position = "none")
 }
 ```
 
