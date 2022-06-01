@@ -32,12 +32,14 @@ Date range: from `r params$date_from` to `r params$date_to`
 
 
 ```{r, global_options, include=FALSE}
+# setting global options for code chunks
 knitr::opts_chunk$set(
   results='hide', fig.keep='all', message=FALSE, warning=FALSE
 )
 ```
 
 ```{r, libraries}
+# loading required libraries
 library(COVID19)
 library(dplyr)
 library(ggplot2)
@@ -49,6 +51,7 @@ library(rnaturalearthdata)
 ```
 
 ```{r, eu_countries}
+# creating a vector with EU country names
 eu_countries <- c('Austria', 'Belgium', 'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic', 'Denmark', 'Estonia', 'Finland', 'France', 'Germany', 'Greece', 'Hungary', 'Ireland', 'Italy', 'Latvia', 'Lithuania', 'Luxembourg', 'Malta', 'Netherlands', 'Poland', 'Portugal', 'Romania', 'Slovakia', 'Slovenia', 'Spain', 'Sweden')
 ```
 
@@ -91,6 +94,7 @@ Definitions of variables are taken from the documentation of the [COVID-19 Data 
 ### Selected country
 
 ```{r, map_function}
+# function creating a map plot
 plot_map <- function(data, fill, title, legend_position, high_color, limits, breaks, labels) {
   ggplot(data = data) +
   geom_sf(mapping = aes(fill = fill)) +
@@ -103,6 +107,7 @@ plot_map <- function(data, fill, title, legend_position, high_color, limits, bre
 ```
 
 ```{r, map_country,fig.align = 'center'}
+# plot which shows selected country on the map (or empty map if the entire EU selected)
 world_map <- ne_countries(scale = 50, returnclass = 'sf')
 data_countries <- data.frame(eu_countries)
 data_countries$country_from_params <- ifelse(data_countries$eu_countries %in% country, 1, 0)
@@ -130,6 +135,7 @@ plot_map(
 ### Timelines of tests, vaccine doses and deaths
 
 ```{r, plots_tests_vaccines, fig.show="hold", out.width="50%", fig.align = 'center'}
+# calculating the first differences of selected variables as initially they are in a cumulative form
 data <- data %>%
   mutate_at(vars(tests), list(~ .x - lag(.x)))
 
@@ -152,6 +158,8 @@ data_time_deaths <- sqldf(
   order by 1 ASC",
   method = "raw"
 )
+
+# bar plot with monthly number of tests in selected country
 if (dim(data_time_deaths)[1] != 0) {
   ggplot(data = head(data_time_deaths,-1), aes(x = date, y = tests)) + 
     geom_bar(position="stack", stat="identity") +
@@ -177,6 +185,7 @@ data_time_vaccines <- sqldf(
   method = "raw"
 )
 
+# bar plot with monthly number of vaccine doses administrated in selected country
 if (dim(data_time_vaccines)[1] != 0) {
   ggplot(data = head(data_time_vaccines,-1), aes(x = date, y = vaccines)) + 
     geom_bar(position="stack", stat="identity") +
@@ -376,6 +385,7 @@ map <-
   european_union_map_cropped %>% 
   left_join(data_countries_vaccines, by = c("name_long" = "country"))
 
+# map plot with number of vaccinated people
 plot_map(
   data = map,
   fill = map$people_vaccinated,
@@ -408,6 +418,7 @@ map <-
   european_union_map_cropped %>% 
   left_join(data_countries_vaccines_full, by = c("name_long" = "country"))
 
+# map plot with number of fully vaccinated people
 plot_map(
   data = map,
   fill = map$people_fully_vaccinated,
@@ -440,6 +451,7 @@ map <-
   european_union_map_cropped %>% 
   left_join(data_countries_vaccines_coeff, by = c("name_long" = "country"))
 
+# map plot with coefficient of vaccinated people
 plot_map(
   data = map,
   fill = map$people_vaccinated,
@@ -472,6 +484,7 @@ map <-
   european_union_map_cropped %>% 
   left_join(data_countries_vaccines_full_coeff, by = c("name_long" = "country"))
 
+# map plot with coefficient of fully vaccinated people
 plot_map(
   data = map,
   fill = map$people_fully_vaccinated,
