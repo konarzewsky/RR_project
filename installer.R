@@ -9,3 +9,9 @@ install.packages('tidyverse')
 install.packages('sf')
 install.packages('rnaturalearth')
 install.packages('rnaturalearthdata')
+install.packages('rmarkdown')
+
+# to install specific older version of any package use:
+
+# require(devtools)
+# install_version("package-name", version = "package-version")
