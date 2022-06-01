@@ -89,10 +89,10 @@ Definitions of variables are taken from the documentation of the [COVID-19 Data 
 | `population`    | Total population.        |
 	
 	
-
-```{r, plots_deaths_vaccines, fig.show="hold", out.width="50%", fig.align = 'center'}
+### Timeline 
+```{r, plots_tests_vaccines, fig.show="hold", out.width="50%", fig.align = 'center'}
 data <- data %>%
-  mutate_at(vars(deaths), list(~ .x - lag(.x)))
+  mutate_at(vars(tests), list(~ .x - lag(.x)))
 
 data <- data %>%
   mutate_at(vars(vaccines), list(~ .x - lag(.x)))
@@ -106,20 +106,20 @@ data1 <- data1[order(data1$date),]
 data_time_deaths <- sqldf(
   "select
     date_month_char as date,
-    sum(deaths)/1000 as deaths
+    sum(tests)/1000 as tests
   from data1
-  where deaths >= 0
+  where tests >= 0
   group by 1
   order by 1 ASC",
   method = "raw"
 )
 if (dim(data_time_deaths)[1] != 0) {
-  ggplot(data = head(data_time_deaths,-1), aes(x = date, y = deaths)) + 
+  ggplot(data = head(data_time_deaths,-1), aes(x = date, y = tests)) + 
     geom_bar(position="stack", stat="identity") +
     labs(
       x = "",
       y = "",
-      title = "monthly number of deaths (thousands)",
+      title = "monthly number of tests (thousands)",
       subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
     ) + scale_y_continuous(labels = scales::comma) +
     scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
