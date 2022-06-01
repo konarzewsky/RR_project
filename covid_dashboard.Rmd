@@ -157,7 +157,7 @@ plot_map <- function(data, fill, title, legend_position, high_color, limits, bre
 }
 ```
 
-```{r, map_country}
+```{r, map_country,fig.align = 'center'}
 world_map <- ne_countries(scale = 50, returnclass = 'sf')
 data_countries <- data.frame(eu_countries)
 data_countries$country_from_params <- ifelse(data_countries$eu_countries %in% country, 1, 0)
@@ -311,92 +311,159 @@ plot_map(
 ```
 
 ```{r, plot_tests2, fig.align = 'center'}
-df$date_char = as.character(df$date)
-df1 <- df[df$administrative_area_level_1 %in% country,]
-df1[is.na(df1$tests), ]$tests <- 0
-df1 <- df1[,c("date", "date_char", 
-                  "tests",
-                  "administrative_area_level_1")]
-#sum(is.na(df1$tests)) #No missings
-#sum(is.na(df1$administrative_area_level_1))
-
-df1_wide <- df1 %>%
-  pivot_wider(names_from = administrative_area_level_1, 
-              values_from = tests,
-              values_fill = 0)
-glimpse(df1_wide)
-colnames(df1_wide)
-df1_wide[, c(3:29)] <- 
-  lapply(df1_wide[, c(3:29)], as.numeric)
-
-df1_wide$tests_all <- df1_wide[, c(3:29)] %>% rowSums()
-df1_wide$date_month <- cut(as.Date(df1_wide$date_char), "month")
-df1_wide$date_month_char = as.character(df1_wide$date_month)
-
-df_time_tests2 <- sqldf(
-  "select
+if (params$country == "Entire EU") {
+  df$date_char = as.character(df$date)
+  df1 <- df[df$administrative_area_level_1 %in% country,]
+  df1[is.na(df1$tests), ]$tests <- 0
+  df1 <- df1[,c("date", "date_char", 
+                "tests",
+                "administrative_area_level_1")]
+  #sum(is.na(df1$tests)) #No missings
+  #sum(is.na(df1$administrative_area_level_1))
+  
+  df1_wide <- df1 %>%
+    pivot_wider(names_from = administrative_area_level_1, 
+                values_from = tests,
+                values_fill = 0)
+  glimpse(df1_wide)
+  colnames(df1_wide)
+  df1_wide[, c(3:29)] <- 
+    lapply(df1_wide[, c(3:29)], as.numeric)
+  
+  df1_wide$tests_all <- df1_wide[, c(3:29)] %>% rowSums()
+  df1_wide$date_month <- cut(as.Date(df1_wide$date_char), "month")
+  df1_wide$date_month_char = as.character(df1_wide$date_month)
+  
+  df_time_tests2 <- sqldf(
+    "select
     date_month_char as date,
     tests_all/1000000 as tests
   from df1_wide
   group by 1
   order by 1 ASC",
-  method = "raw"
-)
+    method = "raw"
+  )
+  
+  ggplot(data = df_time_tests2, aes(x = date, y = tests)) + 
+    geom_bar(position="stack", stat="identity") +
+    labs(
+      x = "",
+      y = "",
+      title = "Cumulative monthly number of tests (millions)",
+      subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
+    ) + scale_y_continuous(labels = scales::comma) +
+    scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
+    theme_classic()
+} else if (country %in% eu_countries) {
+  df$date_char = as.character(df$date)
+  #df[is.na(df1$tests), ]$tests <- 0
+  df1 <- df[df$administrative_area_level_1 %in% params$country,]
+  #df1[is.na(df1$tests), ]$tests <- 0
+  df1 <- df1[,c("date", "date_char", 
+                "tests",
+                "administrative_area_level_1")]
+  df1$tests <- as.numeric(df1$tests)
+  df1$date_month <- cut(as.Date(df1$date_char), "month")
+  df1$date_month_char = as.character(df1$date_month)
 
-ggplot(data = df_time_tests2, aes(x = date, y = tests)) + 
-  geom_bar(position="stack", stat="identity") +
-  labs(
-    x = "",
-    y = "",
-    title = "Cumulative monthly number of tests (millions)",
-    subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
-  ) + scale_y_continuous(labels = scales::comma) +
-  scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
-  theme_classic()
-```
-
-```{r, plot_deaths, fig.align = 'center'}
-df1 <- df[df$administrative_area_level_1 %in% country,]
-df1[is.na(df1$deaths), ]$deaths <- 0
-df1 <- df1[,c("date", "date_char", 
-                  "deaths",
-                  "administrative_area_level_1")]
-#sum(is.na(df1$deaths)) #No missings
-#sum(is.na(df1$administrative_area_level_1))
-
-df1_wide <- df1 %>%
-  pivot_wider(names_from = administrative_area_level_1, 
-              values_from = deaths,
-              values_fill = 0)
-glimpse(df1_wide)
-colnames(df1_wide)
-df1_wide[, c(3:29)] <- 
-  lapply(df1_wide[, c(3:29)], as.numeric)
-
-df1_wide$deaths_all <- df1_wide[, c(3:29)] %>% rowSums()
-df1_wide$date_month <- cut(as.Date(df1_wide$date_char), "month")
-df1_wide$date_month_char = as.character(df1_wide$date_month)
-
-df_time_deaths2 <- sqldf(
-  "select
+  df_time_tests2 <- sqldf(
+    "select
     date_month_char as date,
-    deaths_all/1000 as deaths
-  from df1_wide
+    tests/1000000 as tests
+  from df1
   group by 1
   order by 1 ASC",
-  method = "raw"
-)
-
-ggplot(data = df_time_deaths2, aes(x = date, y = deaths)) + 
-  geom_bar(position="stack", stat="identity") +
-  labs(
-    x = "",
-    y = "",
-    title = "Cumulative monthly number of deaths (thousands)",
-    subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
-  ) + scale_y_continuous(labels = scales::comma) +
-  scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
-  theme_classic()
-
+    method = "raw"
+  )
+  
+  ggplot(data = df_time_tests2, aes(x = date, y = tests)) + 
+    geom_bar(position="stack", stat="identity") +
+    labs(
+      x = "",
+      y = "",
+      title = "Cumulative monthly number of tests (millions)",
+      subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
+    ) + scale_y_continuous(labels = scales::comma) +
+    scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
+    theme_classic()
+}
 ```
 
+
+```{r, plot_deaths, fig.align = 'center'}
+if (params$country == "Entire EU") {
+  df1 <- df[df$administrative_area_level_1 %in% country,]
+  df1[is.na(df1$deaths), ]$deaths <- 0
+  df1 <- df1[,c("date", "date_char", 
+                    "deaths",
+                    "administrative_area_level_1")]
+  #sum(is.na(df1$deaths)) #No missings
+  #sum(is.na(df1$administrative_area_level_1))
+  
+  df1_wide <- df1 %>%
+    pivot_wider(names_from = administrative_area_level_1, 
+                values_from = deaths,
+                values_fill = 0)
+  glimpse(df1_wide)
+  colnames(df1_wide)
+  df1_wide[, c(3:29)] <- 
+    lapply(df1_wide[, c(3:29)], as.numeric)
+  
+  df1_wide$deaths_all <- df1_wide[, c(3:29)] %>% rowSums()
+  df1_wide$date_month <- cut(as.Date(df1_wide$date_char), "month")
+  df1_wide$date_month_char = as.character(df1_wide$date_month)
+  
+  df_time_deaths2 <- sqldf(
+    "select
+      date_month_char as date,
+      deaths_all/1000 as deaths
+    from df1_wide
+    group by 1
+    order by 1 ASC",
+    method = "raw"
+  )
+  
+  ggplot(data = df_time_deaths2, aes(x = date, y = deaths)) + 
+    geom_bar(position="stack", stat="identity") +
+    labs(
+      x = "",
+      y = "",
+      title = "Cumulative monthly number of deaths (thousands)",
+      subtitle = paste(params$country,", ",
+                       params$date_from," - ", params$date_to, sep=""),
+    ) + scale_y_continuous(labels = scales::comma) +
+    scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
+    theme_classic()
+  
+} else if (params$country %in% eu_countries) {
+  df$date_char = as.character(df$date)
+  df1 <- df[df$administrative_area_level_1 %in% params$country,]
+  df1 <- df1[,c("date", "date_char", 
+                "deaths",
+                "administrative_area_level_1")]
+  df1$deaths <- as.numeric(df1$deaths)
+  df1$date_month <- cut(as.Date(df1$date_char), "month")
+  df1$date_month_char = as.character(df1$date_month)
+
+  df_time_deaths2 <- sqldf(
+    "select
+    date_month_char as date,
+    deaths/1000 as deaths
+  from df1
+  group by 1
+  order by 1 ASC",
+    method = "raw"
+  )
+  
+  ggplot(data = df_time_deaths2, aes(x = date, y = deaths)) + 
+    geom_bar(position="stack", stat="identity") +
+    labs(
+      x = "",
+      y = "",
+      title = "Cumulative monthly number of deaths (thousands)",
+      subtitle = paste(params$country,", ",params$date_from," - ", params$date_to, sep=""),
+    ) + scale_y_continuous(labels = scales::comma) +
+    scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
+    theme_classic()
+}
+```
