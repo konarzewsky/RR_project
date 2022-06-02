@@ -199,7 +199,7 @@ if (dim(data_time_vaccines)[1] != 0) {
 ```{r, plot_tests2, fig.align = 'center'}
   # Prepare data to pivoting and plotting
   df$date_char = as.character(df$date)
-  df1 <- df[df$administrative_area_level_1 %in% country,]
+  df1 <- df[df$administrative_area_level_1 %in% eu_countries,]
   df1[is.na(df1$tests), "tests"] <- 0
   df1 <- df1[,c("date", "date_char", 
                 "tests",
@@ -292,7 +292,7 @@ The number of tests from `r params$date_from` to `r params$date_to` in `r params
 
 ```{r, plot_deaths, fig.align = 'center'}
   # Prepare data to pivoting and plotting
-  df1 <- df[df$administrative_area_level_1 %in% country,]
+  df1 <- df[df$administrative_area_level_1 %in% eu_countries,]
   df1[is.na(df1$deaths), "deaths"] <- 0
   df1 <- df1[,c("date", "date_char", 
                     "deaths",
@@ -395,6 +395,7 @@ for(c in eu_countries) {
   most_tests_vector <- append(most_tests_vector, temp_test)
   most_deaths_vector <- append(most_deaths_vector, temp_death)
 }
+# make a dataframe and sort it 
 most_tests_df <- data.frame(eu_countries, most_tests_vector)
 most_tests_df <- arrange(most_tests_df, desc(most_tests_vector))
 
@@ -407,10 +408,11 @@ colnames(most_tests_df) <- c("Country", "Tests")
 d1 <- head(most_tests_df)
 d2 <- head(most_deaths_df)
 
+# kbl function from library(kableExtra) - a scrolll box
 kbl(list(most_tests_df, most_deaths_df)) %>%
-  kable_paper(bootstrap_options = "striped",
-              full_width = F) %>%
-  scroll_box(width = "800px", height = "200px")
+    kable_paper(bootstrap_options = "striped",
+                full_width = F) %>%
+    scroll_box(width = "800px", height = "200px")
 
 ```
 
