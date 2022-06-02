@@ -48,6 +48,7 @@ library(tidyverse)
 library(sf)
 library(rnaturalearth)
 library(rnaturalearthdata)
+library(kableExtra)
 ```
 
 ```{r, eu_countries}
@@ -75,7 +76,7 @@ df <- data
 ```
 
 ### Epidemiological variables
-Definitions of variables are taken from the documentation of the [COVID-19 Data Hub](https://covid19datahub.io/index.html#covid-19-data-hub-)
+Definitions of variables are taken from the documentation of the [COVID-19 Data Hub](https://covid19datahub.io/index.html#covid-19-data-hub-). The project is created by [Guidotti and Ardia (2020)](https://joss.theoj.org/papers/10.21105/joss.02376)
 
 | Variable    | Description |
 | :---------- | :---------------- |
@@ -201,8 +202,6 @@ if (dim(data_time_vaccines)[1] != 0) {
 ```
 
 ```{r, plot_tests2, fig.align = 'center'}
-# The case when we choose the entire EU
-if (params$country == "Entire EU") {
   # Prepare data to pivoting and plotting
   df$date_char = as.character(df$date)
   df1 <- df[df$administrative_area_level_1 %in% country,]
@@ -211,6 +210,12 @@ if (params$country == "Entire EU") {
                 "tests",
                 "administrative_area_level_1")]
   
+  # The variable df1_tests is used in the table with the highest number of tests
+  df1_tests <- df1
+  
+# The case when we choose the entire EU
+if (params$country == "Entire EU") {
+
   # Pivot data from long to wide
   df1_wide <- df1 %>%
     pivot_wider(names_from = administrative_area_level_1, 
@@ -259,13 +264,14 @@ if (params$country == "Entire EU") {
                 "tests",
                 "administrative_area_level_1")]
   df1$tests <- as.numeric(df1$tests)
+  df1[is.na(df1$tests), ]$tests <- 0
   df1$date_month <- cut(as.Date(df1$date_char), "month")
   df1$date_month_char = as.character(df1$date_month)
   
   # Group data into monthly intervals
   df_time_tests2 <- sqldf(
     "select
-    date_month_char as date,
+    date_month as date,
     tests/1000000 as tests
   from df1
   group by 1
@@ -290,14 +296,17 @@ The number of tests from `r params$date_from` to `r params$date_to` in `r params
 
 
 ```{r, plot_deaths, fig.align = 'center'}
-# The case when we choose the entire EU
-if (params$country == "Entire EU") {
   # Prepare data to pivoting and plotting
   df1 <- df[df$administrative_area_level_1 %in% country,]
   df1[is.na(df1$deaths), ]$deaths <- 0
   df1 <- df1[,c("date", "date_char", 
                     "deaths",
                     "administrative_area_level_1")]
+  
+  # The variable df1_tests is used in the table with the highest number of tests
+  df1_deaths <- df1
+# The case when we choose the entire EU
+if (params$country == "Entire EU") {
   
   # Pivot data from long to wide
   df1_wide <- df1 %>%
@@ -347,6 +356,7 @@ if (params$country == "Entire EU") {
                 "deaths",
                 "administrative_area_level_1")]
   df1$deaths <- as.numeric(df1$deaths)
+  df1[is.na(df1$deaths), ]$deaths <- 0
   df1$date_month <- cut(as.Date(df1$date_char), "month")
   df1$date_month_char = as.character(df1$date_month)
 
@@ -374,6 +384,40 @@ if (params$country == "Entire EU") {
 }
 ```
 The number of deaths from `r params$date_from` to `r params$date_to` in `r params$country` is equal to `r round(max(df_time_deaths2$deaths),1)` thousands.
+
+### Countries with the highest number of tests and deaths
+```{r echo=FALSE, results='asis', fig.align = 'center'}
+# Which country has the most tests and deaths?
+# Create empty vectors
+most_tests_vector <- c()
+most_deaths_vector <- c()
+# Find the highest number of tests and deaths for a particular country
+# and store it in a vector
+for(c in eu_countries) {
+  temp_test <- max(df1_tests[df1_tests$administrative_area_level_1 %in% c, ]$tests)
+  temp_death <- max(df1_deaths[df1_deaths$administrative_area_level_1 %in% c, ]$deaths)
+  
+  most_tests_vector <- append(most_tests_vector, temp_test)
+  most_deaths_vector <- append(most_deaths_vector, temp_death)
+}
+most_tests_df <- data.frame(eu_countries, most_tests_vector)
+most_tests_df <- arrange(most_tests_df, desc(most_tests_vector))
+
+most_deaths_df <- data.frame(eu_countries, most_deaths_vector)
+most_deaths_df <- arrange(most_deaths_df, desc(most_deaths_vector))
+
+colnames(most_deaths_df) <- c("Country", "Deaths")
+colnames(most_tests_df) <- c("Country", "Tests")
+
+d1 <- head(most_tests_df)
+d2 <- head(most_deaths_df)
+
+kbl(list(most_tests_df, most_deaths_df)) %>%
+  kable_paper(bootstrap_options = "striped",
+              full_width = F) %>%
+  scroll_box(width = "800px", height = "200px")
+
+```
 
 
 ### EU - vaccinated and fully vaccinated people
